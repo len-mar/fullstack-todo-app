@@ -1,7 +1,10 @@
 package org.example.fullstacktodoapp;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -10,16 +13,21 @@ import java.util.UUID;
 public class TodoService {
     private final TodoRepository repository;
 
-    // todo: find a way to display just the descrippy
-    // .stream().map(t -> t.description()).toList()
     public List<Todo> getAll() {
         return repository.findAll();
     }
 
-    public String addTodo(String description) {
-        Todo created = new Todo(UUID.randomUUID().toString(), description);
+    public String addTodo(String todo) {
+        // this somehow parses the string object to retrieve just the description
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode node = null;
+        try {
+            node = mapper.readTree(todo);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        Todo created = new Todo(UUID.randomUUID().toString(), node.get("description").asText());
         repository.save(created);
-        // todo: find out why this works but the frontend still displays object notation
         return created.description();
     }
 
