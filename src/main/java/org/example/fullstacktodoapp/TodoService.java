@@ -19,6 +19,7 @@ public class TodoService {
     public String addTodo(String description) {
         Todo created = new Todo(UUID.randomUUID().toString(), description);
         repository.save(created);
+        // todo: find out why this works but the frontend still displays object notation
         return created.description();
     }
 
