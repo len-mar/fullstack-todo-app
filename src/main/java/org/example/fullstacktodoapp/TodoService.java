@@ -32,4 +32,10 @@ public class TodoService {
         repository.save(updated);
         return updated;
     }
+
+    public Todo deleteTodo(String id) {
+        Todo deleted = repository.getById(id);
+        repository.removeById(id);
+        return deleted;
+    }
 }
