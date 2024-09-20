@@ -1,9 +1,7 @@
 package org.example.fullstacktodoapp;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.example.fullstacktodoapp.AiApi.AiApiService;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
@@ -12,21 +10,21 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TodoService {
     private final TodoRepository repository;
+    private final AiApiService aiService;
 
     public List<Todo> getAll() {
         return repository.findAll();
     }
 
-    public String addTodo(String todo) {
-        // this somehow parses the string object to retrieve just the description
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode node = null;
-        try {
-            node = mapper.readTree(todo);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        Todo created = new Todo(UUID.randomUUID().toString(), node.get("description").asText());
+    public String addTodo(String todoJson) {
+        // parses json and isolates description
+        JSONObject jsonObject = new JSONObject(todoJson);
+        String description = jsonObject.getString("description");
+
+        // spellchecks description
+        description = aiService.spellcheckTodo(description);
+
+        Todo created = new Todo(UUID.randomUUID().toString(), description, TodoStatus.OPEN);
         repository.save(created);
         return created.description();
     }
