@@ -10,7 +10,9 @@ import java.util.List;
 @Service
 public class AiApiService {
     private final RestClient restClient;
-
+// todo: why does maven build fail when triggered manually,
+//  but running the full application is completely fine?
+//  the error given is "cannot resolve authkey"
     public AiApiService(@Value("${AUTH_KEY}") String key){
             this.restClient = RestClient.builder()
                     .defaultHeader("Authorization", "Bearer " + key)

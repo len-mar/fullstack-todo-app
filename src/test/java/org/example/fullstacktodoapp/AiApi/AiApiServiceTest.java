@@ -5,13 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureMockRestServiceServer;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpMethod;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,44 +17,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureMockRestServiceServer
 class AiApiServiceTest {
+    @MockBean
+    AiApiService aiService;
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private MockRestServiceServer mockWebServer;
-
+    // todo: is this test still necessary when we're testing addTodo in the TodoService test?
+    // what does this test add? it doesn't intercept any outside call
     @Test
     void spellcheckTodo() throws Exception {
-        mockWebServer.expect(requestTo("https://api.openai.com/v1/chat/completions"))
-                .andExpect(method(HttpMethod.POST))
-                .andRespond(withSuccess("""
-                                {
-                                    "info": {
-                                        "count": 32,
-                                        "pages": 42
-                                    },
-                                    "results": [
-                                        {
-                                            "id": 1,
-                                            "name": "Rick Sanchez",
-                                            "status": "Alive",
-                                            "species": "Human"
-                                        }
-                                    ]
-                                }
-                                """,
-                        MediaType.APPLICATION_JSON));
-    mockMvc.perform(post("/api/todo"))
-            .andExpect(status().isOk())
-            .andExpect(content().json("""
-                        [
-                             {
-                                 "id": 1,
-                                 "name": "Rick Sanchez",
-                                 "status": "Alive",
-                                 "species": "Human"
-                             }
-                        ]
-                        """));
-    }}
+        given(aiService.spellcheckTodo("descrizzy"))
+                .willReturn("descrizzy");
+        mockMvc.perform(post("/api/todo").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                                                {
+                                                                    "description": "descrizzy",
+                                                                    "status": "open"
+                                                                }
+                                """))
+                .andExpect(status().isOk())
+        .andExpect(content().string("descrizzy"));
+    }
+
+}
